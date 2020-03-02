@@ -1,0 +1,149 @@
+#include<stdio.h>
+#include<stdlib.h>
+#define MAX_VERTEX_NUM 20
+#define inf 1000
+
+typedef char VertexType;
+typedef enum { UDG, DG } GraphType;
+typedef struct
+{
+	VertexType Vertex[MAX_VERTEX_NUM];
+	int arcs[MAX_VERTEX_NUM][MAX_VERTEX_NUM];
+	GraphType Mtype;
+	int arcnum, vernum;    //图当前的定点数和弧（或边）数
+}MGraph;
+
+//typedef struct
+//{
+//	int start;
+//	int end;
+//	int weight;
+//}Assist_array;
+
+void CreateMGraph(MGraph *MG)
+{
+	int i, j, k, m, row = 0, line = 0, weight = 0;
+	VertexType c, tail, top;
+	printf("请输入图的类型1（有向图），0为无向图：");
+	scanf("%d", &MG->Mtype);
+	printf("\n请输入顶点数：");
+	scanf("%d", &MG->vernum);
+	printf("\n请输入边数：");
+	scanf("%d", &MG->arcnum);
+	getchar();
+	//初始化邻接矩阵
+	for (i = 0; i < MG->vernum; i++)
+		for (j = 0; j < MG->vernum; j++)
+			MG->arcs[i][j] = 0;
+	//初始化顶点数组
+	printf("\n请输入顶点元素：");
+	scanf("%c", &c);
+	for (k = 0; k < MG->vernum; k++)
+	{
+		MG->Vertex[k] = c;
+		scanf("%c", &c);
+	}
+	//getchar();
+	//输入图的边
+	for (m = 0; m < MG->arcnum; m++)
+	{
+		printf("\n请输入第%dth条边及对应的权值：", m + 1);
+		scanf("%c", &tail);
+		scanf("%c", &top);
+		scanf("%d", &weight);
+		//根据边写入对应邻接矩阵
+		for (i = 0; i < MG->vernum; i++)
+		{
+			if (MG->Vertex[i] == tail)
+			{
+				row = i;
+				break;
+			}
+		}
+		for (j = 0; j < MG->vernum; j++)
+		{
+			if (MG->Vertex[j] == top)
+			{
+				line = j;
+				break;
+			}
+		}
+		if (row != line)
+			MG->arcs[row][line] = MG->arcs[line][row] = weight;    //无向图邻接矩阵沿对角线对称
+		else
+			printf("\n输入第%dth条边出错，请重试", m);
+		getchar();
+	}
+
+}
+
+void printMG(MGraph MG)
+{
+	int i, j;
+	for (i = 0; i < MG.vernum; i++)
+	{
+		printf("\n");
+		for (j = 0; j < MG.vernum; j++)
+			printf("%d ", MG.arcs[i][j]);
+	}
+	printf("\n\n");
+}
+
+int findMinDis(int *Dis, int *Visit, int Num)
+{
+	int i, j = 0, min = inf;
+	for (i = 0; i < Num; i++)
+		if (Visit[i] == 0 && Dis[i] < min)
+		{
+			min = Dis[i];
+			j = i;
+		}
+	if (j == 0)
+	{
+		printf("输入邻接矩阵有误，请重新输入！\n");
+		return 0;
+	}
+	return j;
+}
+
+void Dijkstra(MGraph MG)
+{
+	//辅助数组，记录每个点到源点最短的路径
+	int i, dis[MAX_VERTEX_NUM] = { 0 };
+	for (i = 1; i < MG.vernum; i++)
+		dis[i] = inf;
+	int visit[MAX_VERTEX_NUM] = { 0 }, k = 0;
+	//未经过点的集合
+	int N = MG.vernum;
+	//从源点开始，作为起始点
+	visit[0] = 1;
+	N = N - 1;
+	while (N)
+	{
+		//修正最短路径
+		for (i = 0; i < MG.vernum; i++)
+			if (MG.arcs[k][i] != 0 && visit[i] == 0 && dis[i] > (dis[k] + MG.arcs[k][i]))
+			{
+				dis[i] = dis[k] + MG.arcs[k][i];
+				//visit[i] = 1;
+			}
+		//找到最短路径
+		k = findMinDis(dis, visit, MG.vernum);
+		visit[k] = 1;
+		N = 0;
+		for (i = 0; i < MG.vernum; i++)
+			if (0 == visit[i])
+				N = N + 1;
+	}
+	for (i = 1; i < MG.vernum; i++)
+		printf("\n点%c到点%c最短路径为%d\n", MG.Vertex[i], MG.Vertex[0], dis[i]);
+}
+
+int main()
+{
+	MGraph MG;
+	CreateMGraph(&MG);
+	printMG(MG);
+	Dijkstra(MG);
+	getchar();
+}
